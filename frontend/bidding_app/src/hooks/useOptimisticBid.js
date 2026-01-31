@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import socket from '../services/socket'
 import { useAuction } from '../context/AuctionContext'
+import { getUserId } from '../utils/user'
+
+const userId = getUserId()
 
 /**
  * useOptimisticBid
@@ -35,9 +38,9 @@ export function useOptimisticBid(item) {
 
     // 2️⃣ SEND TO SERVER
     socket.emit('BID_PLACED', {
-      itemId: item.id,
-      userId,
-      bidAmount: optimisticBid
+    itemId: item.id,
+    userId,
+    bidAmount
     })
 
     // 3️⃣ WAIT FOR REJECTION (success is handled by UPDATE_BID)

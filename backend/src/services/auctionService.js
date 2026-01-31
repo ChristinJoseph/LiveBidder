@@ -13,8 +13,11 @@ async function placeBid({ itemId, userId, bidAmount }) {
       AND auction_end_time > $4
       AND current_bid < $1
     RETURNING *
-    `,
-    [bidAmount, userId, itemId, now]
+    `,`
+  INSERT INTO bids (item_id, user_id, bid_amount, created_at)
+  VALUES ($1, $2, $3, $4)
+  `,
+    [itemId, userId, bidAmount, now]
   )
 
   // 👇 THIS TELLS YOU IF DB UPDATED OR NOT
