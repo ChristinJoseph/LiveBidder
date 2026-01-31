@@ -15,7 +15,8 @@ const server = http.createServer(app);
 
 
 const allowedOrigins = [
-  "https://live-bidder-94ht.vercel.app/"
+  "https://live-bidder-94ht.vercel.app",
+   "http://localhost:5173" 
 ];
 
 /* -------------------- MIDDLEWARE -------------------- */
