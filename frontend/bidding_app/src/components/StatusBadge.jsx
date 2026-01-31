@@ -25,10 +25,10 @@ export default function StatusBadge({ item }) {
       className={`inline-block mt-2 px-2 py-1 rounded text-sm ${
         isWinning
           ? 'bg-green-600 text-white'
-          : 'bg-gray-600 text-white'
+          : 'bg-red-600 text-white'
       }`}
     >
-      {isWinning ? 'Winning' : 'Not Winning'}
+      {isWinning ? 'Winning' : 'OutBid'}
     </span>
   )
 }
