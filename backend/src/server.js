@@ -1,51 +1,68 @@
-const express = require('express')
-const app = express() 
 require("dotenv").config();
-const http = require('http')
+
+const express = require("express");
+const http = require("http");
 const cors = require("cors");
-const { Server } = require('socket.io')
-const PORT = process.env.PORT || 4000;
+const { Server } = require("socket.io");
 
-const initDb = require('./db/initDb')
+const initDb = require("./db/initDb");
+const auctionRoutes = require("./controllers/auctionController");
+const { auctionSocket } = require("./sockets/auctionSocket");
+const startAuctionWatcher = require("./services/auctionWatcher");
 
-
-
-const auctionRoutes = require('./controllers/auctionController')
-const { auctionSocket } = require('./sockets/auctionSocket')
-const startAuctionWatcher = require('./services/auctionWatcher')
-
+const app = express();
+const server = http.createServer(app);
 
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://live-bidder-94ht.vercel.app/"
+];
 
-async function start() {
-  await initDb()
-  server.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
-}
-
-
-start()
-
+/* -------------------- MIDDLEWARE -------------------- */
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  credentials: true,
 }));
 
-const server = http.createServer(app)
+app.use(express.json());
+
+/* -------------------- ROUTES -------------------- */
+app.use("/api", auctionRoutes);
+
+app.get("/", (req, res) => {
+  res.send("Auction backend running");
+});
+
+/* -------------------- SOCKET.IO -------------------- */
 const io = new Server(server, {
-  cors: { origin: 'http://localhost:5173',
-     methods: ["GET", "POST"],
-   }
-})
-// console.log('Registering routes')
-app.use(express.json())
-app.use('/api', auctionRoutes)
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+  },
+});
 
-startAuctionWatcher(io)
+io.on("connection", (socket) => {
+  auctionSocket(io, socket);
+});
 
-io.on('connection', (socket) => {
-  auctionSocket(io, socket)
-})
+/* -------------------- SERVICES -------------------- */
+startAuctionWatcher(io);
 
+/* -------------------- START SERVER -------------------- */
+const PORT = process.env.PORT || 4000;
+
+async function start() {
+  try {
+    await initDb();
+    server.listen(PORT, () => {
+      console.log("Server running on port", PORT);
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
+}
+
+start();
