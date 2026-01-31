@@ -5,7 +5,7 @@ export default function BidButton({ item }) {
 
   const disabled =
     item.status === 'ended' ||
-    item.currentBidder === 'user1' ||
+    item.currentBidder === userId ||
     isPending
 
   return (
@@ -16,5 +16,7 @@ export default function BidButton({ item }) {
     >
       {isPending ? 'Placing bid…' : 'Bid +10'}
     </button>
+    
+    
   )
 }

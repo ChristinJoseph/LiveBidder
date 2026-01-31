@@ -3,22 +3,15 @@ import socket from '../services/socket'
 import { useAuction } from '../context/AuctionContext'
 import { getUserId } from '../utils/user'
 
-const userId = getUserId()
-
-/**
- * useOptimisticBid
- * ----------------
- * Handles optimistic UI update for bidding.
- * Rolls back automatically if server rejects bid.
- */
 export function useOptimisticBid(item) {
   const { dispatch } = useAuction()
   const [isPending, setIsPending] = useState(false)
+  const userId = getUserId()
 
-  function placeBid(userId, increment = 10) {
+  function placeBid(increment = 10) {
     if (isPending) return
 
-    const optimisticBid = item.currentBid + increment
+    const bidAmount = Number(item.currentBid) + increment
     const previousBid = item.currentBid
     const previousBidder = item.currentBidder
 
@@ -30,7 +23,7 @@ export function useOptimisticBid(item) {
       payload: {
         id: item.id,
         updates: {
-          currentBid: optimisticBid,
+          currentBid: bidAmount,
           currentBidder: userId
         }
       }
@@ -38,16 +31,42 @@ export function useOptimisticBid(item) {
 
     // 2️⃣ SEND TO SERVER
     socket.emit('BID_PLACED', {
-    itemId: item.id,
-    userId,
-    bidAmount
+      itemId: item.id,
+      userId,
+      bidAmount
     })
 
-    // 3️⃣ WAIT FOR REJECTION (success is handled by UPDATE_BID)
+    // 3️⃣ HANDLE SERVER CONFIRMATION
+    const onUpdate = (data) => {
+      if (data.itemId !== item.id) return
+
+      // If MY bid was accepted
+      if (data.bidderId === userId) {
+        setIsPending(false)
+      } 
+      // Someone else outbid me
+      else {
+        dispatch({
+          type: 'UPDATE_ITEM',
+          payload: {
+            id: item.id,
+            updates: {
+              currentBid: data.newBid,
+              currentBidder: data.bidderId
+            }
+          }
+        })
+        setIsPending(false)
+      }
+
+      cleanup()
+    }
+
+    // 4️⃣ HANDLE REJECTION
     const onReject = (data) => {
       if (data.itemId !== item.id) return
 
-      // 🔁 ROLLBACK
+      // Rollback optimistic update
       dispatch({
         type: 'UPDATE_ITEM',
         payload: {
@@ -60,16 +79,16 @@ export function useOptimisticBid(item) {
       })
 
       setIsPending(false)
+      cleanup()
+    }
+
+    function cleanup() {
+      socket.off('UPDATE_BID', onUpdate)
       socket.off('BID_REJECTED', onReject)
     }
 
+    socket.on('UPDATE_BID', onUpdate)
     socket.on('BID_REJECTED', onReject)
-
-    // 4️⃣ CLEAR PENDING WHEN CONFIRMED BY SERVER
-    socket.once('UPDATE_BID', () => {
-      setIsPending(false)
-      socket.off('BID_REJECTED', onReject)
-    })
   }
 
   return {
