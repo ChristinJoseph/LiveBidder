@@ -8,6 +8,9 @@ export default function CountdownTimer({ endTime }) {
   if (remaining <= 0) {
     return <span className="text-red-500">Auction Ended</span>
   }
+  if (!endTime || isNaN(endTime)) {
+  return <span className="text-red-400">Invalid time</span>
+}
 
   const seconds = Math.floor(remaining / 1000)
 
