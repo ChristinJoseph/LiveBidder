@@ -25,9 +25,17 @@ router.get('/items', async (req, res) => {
   `)
 
   res.json({
-    items: result.rows,
-    serverTime: Date.now()
-  })
+  items: result.rows.map(row => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    currentBid: row.current_bid,
+    currentBidder: row.current_bidder,
+    auctionEndTime: Number(row.auction_end_time),
+    status: row.status
+  })),
+  serverTime: Date.now()
+})
 })
 
 /**
