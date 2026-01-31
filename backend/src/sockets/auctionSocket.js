@@ -7,15 +7,12 @@ function auctionSocket(io, socket) {
 
       io.emit('UPDATE_BID', {
         itemId: item.id,
-        newBid: item.currentBid,
-        bidderId: item.currentBidder,
-        serverTime: Date.now()
+        newBid: item.current_bid,
+        bidderId: item.current_bidder
       })
     } catch (err) {
       socket.emit('BID_REJECTED', {
-        itemId: data.itemId,
-        reason: err.code,
-        currentBid: err.currentBid
+        itemId: data.itemId
       })
     }
   })

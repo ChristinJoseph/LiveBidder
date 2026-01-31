@@ -1,15 +1,42 @@
 const express = require('express')
+const app = express() 
+require("dotenv").config();
 const http = require('http')
+const cors = require("cors");
 const { Server } = require('socket.io')
 
+const initDb = require('./db/initDb')
+
+
+
 const auctionRoutes = require('./controllers/auctionController')
-const auctionSocket = require('./sockets/auctionSocket')
+const { auctionSocket } = require('./sockets/auctionSocket')
 const startAuctionWatcher = require('./services/auctionWatcher')
 
-const app = express() 
+
+
+
+async function start() {
+  await initDb()
+  server.listen(4000, () => {
+    console.log('Server running on port 4000')
+  })
+}
+
+
+start()
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
 const server = http.createServer(app)
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: { origin: 'http://localhost:5173',
+     methods: ["GET", "POST"],
+   }
 })
 // console.log('Registering routes')
 app.use(express.json())
@@ -21,6 +48,3 @@ io.on('connection', (socket) => {
   auctionSocket(io, socket)
 })
 
-server.listen(4000, () => {
-  console.log('Auction server running on port 4000')
-})

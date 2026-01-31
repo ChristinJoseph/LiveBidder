@@ -1,20 +1,31 @@
-const { auctions } = require('../data/store')
+const db = require('../config/db')
 
 function startAuctionWatcher(io) {
-  setInterval(() => {
-    const now = Date.now()
+  setInterval(async () => {
+    try {
+      const now = Date.now()
 
-    for (const auction of auctions.values()) {
+      const result = await db.query(
+        `
+        UPDATE auction_items
+        SET status = 'ended'
+        WHERE status = 'active'
+          AND auction_end_time <= $1
+        RETURNING id
+        `,
+        [now]
+      )
 
-      if (auction.status !== 'active') continue
-      if (now >= auction.auctionEndTime) {
-        auction.status = 'ended'
-
+      // Notify clients for each ended auction
+      result.rows.forEach(row => {
         io.emit('AUCTION_ENDED', {
-          itemId: auction.id,
+          itemId: row.id,
           endedAt: now
         })
-      }
+      })
+
+    } catch (err) {
+      console.error('Auction watcher error:', err)
     }
   }, 1000)
 }

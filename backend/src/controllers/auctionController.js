@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { auctions } = require('../data/store')
+const { auctions, locks } = require("../data/store");
 
 // console.log('Auction controller loaded')
 /**

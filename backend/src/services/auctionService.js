@@ -1,33 +1,30 @@
-const { auctions, locks } = require('../data/store')
-const { withLock } = require('../utils/mutex')
+const db = require('../config/db')
 
 async function placeBid({ itemId, userId, bidAmount }) {
-  return withLock(locks, itemId, async () => {
-    const item = auctions.get(itemId)
+  const now = Date.now()
 
-    if (!item || item.status !== 'active') {
-      throw { code: 'auction_ended' }
-    }
+  const result = await db.query(
+    `
+    UPDATE auction_items
+    SET current_bid = $1,
+        current_bidder = $2
+    WHERE id = $3
+      AND status = 'active'
+      AND auction_end_time > $4
+      AND current_bid < $1
+    RETURNING *
+    `,
+    [bidAmount, userId, itemId, now]
+  )
 
-    if (Date.now() >= item.auctionEndTime) {
-      item.status = 'ended'
-      throw { code: 'auction_ended' }
-    }
+  // 👇 THIS TELLS YOU IF DB UPDATED OR NOT
+  console.log('DB UPDATE RESULT:', result.rowCount)
 
-    if (bidAmount <= item.currentBid) {
-      throw { code: 'bid_too_low', currentBid: item.currentBid }
-    }
+  if (result.rowCount === 0) {
+    throw { code: 'bid_rejected' }
+  }
 
-    item.currentBid = bidAmount
-    item.currentBidder = userId
-    item.bidHistory.push({
-      userId,
-      bidAmount,
-      timestamp: Date.now()
-    })
-
-    return item
-  })
+  return result.rows[0]
 }
 
 module.exports = { placeBid }
