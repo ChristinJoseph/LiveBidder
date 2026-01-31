@@ -10,9 +10,22 @@ const db = require('../config/db');
  * Initial hydration endpoint.
  * Client uses this to render dashboard.
  */
-router.get('/items', (req, res) => {
+router.get('/items', async (req, res) => {
+  const result = await db.query(`
+    SELECT
+      id,
+      title,
+      description,
+      current_bid,
+      current_bidder,
+      auction_end_time,
+      status
+    FROM auction_items
+    ORDER BY auction_end_time
+  `)
+
   res.json({
-    items: [...auctions.values()],
+    items: result.rows,
     serverTime: Date.now()
   })
 })
