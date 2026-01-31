@@ -7,7 +7,7 @@ import AuctionCard from './AuctionCard'
 export default function AuctionDashboard() {
   const { state, dispatch } = useAuction()
   useAuctionSocket()
-
+  
   useEffect(() => {
     getItems().then(data => {
       dispatch({ type: 'SET_ITEMS', payload: data.items })

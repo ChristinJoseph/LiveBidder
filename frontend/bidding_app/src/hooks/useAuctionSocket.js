@@ -10,18 +10,18 @@ export function useAuctionSocket() {
       console.log('Socket connected')
     })
 
-    socket.on('UPDATE_BID', data => {
-      dispatch({
-        type: 'UPDATE_ITEM',
-        payload: {
-          id: data.itemId,
-          updates: {
-            currentBid: data.newBid,
-            currentBidder: data.bidderId
-          }
-        }
-      })
-    })
+    socket.on('UPDATE_BID', (data) => {
+  dispatch({
+    type: 'UPDATE_ITEM',
+    payload: {
+      id: data.itemId,
+      updates: {
+        currentBid: data.newBid,
+        currentBidder: data.bidderId
+      }
+    }
+  })
+})
 
     socket.on('AUCTION_ENDED', ({ itemId }) => {
       dispatch({

@@ -1,4 +1,5 @@
 import { useAuction } from '../context/AuctionContext'
+import { getUserId } from '../utils/user'
 
 /**
  * StatusBadge
@@ -6,8 +7,10 @@ import { useAuction } from '../context/AuctionContext'
  * Shows user bidding status per item.
  */
 export default function StatusBadge({ item }) {
-  const USER_ID = 'user1' // later replace with auth
+  const userId = getUserId()
   const { state } = useAuction()
+
+  const isWinning = item.currentBidder === userId
 
   if (item.status === 'ended') {
     return (
@@ -17,17 +20,15 @@ export default function StatusBadge({ item }) {
     )
   }
 
-  if (item.currentBidder === USER_ID) {
-    return (
-      <span className="inline-block mt-2 px-2 py-1 text-xs rounded bg-green-600">
-        Winning
-      </span>
-    )
-  }
-
   return (
-    <span className="inline-block mt-2 px-2 py-1 text-xs rounded bg-gray-700">
-      Not Winning
+    <span
+      className={`inline-block mt-2 px-2 py-1 rounded text-sm ${
+        isWinning
+          ? 'bg-green-600 text-white'
+          : 'bg-gray-600 text-white'
+      }`}
+    >
+      {isWinning ? 'Winning' : 'Not Winning'}
     </span>
   )
 }

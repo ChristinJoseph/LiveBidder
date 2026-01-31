@@ -5,11 +5,12 @@ function auctionSocket(io, socket) {
     try {
       const item = await placeBid(data)
 
-      io.emit('UPDATE_BID', {
-        itemId: item.id,
-        newBid: item.current_bid,
-        bidderId: item.current_bidder
-      })
+    io.emit('UPDATE_BID', {
+      itemId: item.id,
+      newBid: item.current_bid,
+      bidderId: item.current_bidder,
+      timestamp: Date.now()
+    })
     } catch (err) {
       socket.emit('BID_REJECTED', {
         itemId: data.itemId

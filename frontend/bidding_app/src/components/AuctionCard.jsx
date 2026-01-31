@@ -1,6 +1,9 @@
 import CountdownTimer from './CountdownTimer'
 import BidButton from './BidButton'
 import StatusBadge from './StatusBadge'
+import { getUserId } from '../utils/user'
+
+
 
 export default function AuctionCard({ item }) {
   return (
